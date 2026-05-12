@@ -4765,8 +4765,35 @@
   }
 ];
 
-        function showHome() {
+        // ===== URL ROUTING =====
+        const BASE = '/GubyoDonanim_Rehberi';
+
+        function toSlug(str) {
+            return str.toLowerCase()
+                .replace(/\u0130/g, 'i').replace(/\u0131/g, 'i').replace(/\u011f/g, 'g')
+                .replace(/\u00fc/g, 'u').replace(/\u015f/g, 's').replace(/\u00f6/g, 'o').replace(/\u00e7/g, 'c')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function routeFromUrl() {
+            const path = window.location.pathname.replace(BASE, '') || '/';
+            const parts = path.replace(/^\//, '').split('/').filter(Boolean);
+            if (!parts.length) { showHome(false); return; }
+            const cat = appData.find(c => toSlug(c.Name) === parts[0]);
+            if (!cat) { showHome(false); return; }
+            if (parts.length === 1) { showCategory(cat.Id, false); return; }
+            const hw = cat.Components.find(h => toSlug(h.Name) === parts[1]);
+            if (hw) showDetails(cat.Id, hw.Id, false);
+            else showCategory(cat.Id, false);
+        }
+
+        window.addEventListener('popstate', routeFromUrl);
+        // ===== URL ROUTING END =====
+
+        function showHome(updateUrl = true) {
             window.scrollTo(0, 0);
+            if (updateUrl) history.pushState(null, null, BASE + '/');
             let html = `
                 <div class="hero-section text-center">
                     <div class="container py-4">
@@ -4807,10 +4834,11 @@
             document.getElementById('view-container').innerHTML = html;
         }
 
-        function showCategory(catId) {
+        function showCategory(catId, updateUrl = true) {
             window.scrollTo(0, 0);
             const category = appData.find(c => c.Id == catId);
             if (!category) return;
+            if (updateUrl) history.pushState(null, null, BASE + '/' + toSlug(category.Name));
 
             let html = `
                 <div class="container mt-5">
@@ -4867,11 +4895,12 @@
             });
         }
 
-        function showDetails(catId, hardwareId) {
+        function showDetails(catId, hardwareId, updateUrl = true) {
             window.scrollTo(0, 0);
             const category = appData.find(c => c.Id == catId);
             const h = category.Components.find(item => item.Id == hardwareId);
             if (!h) return;
+            if (updateUrl) history.pushState(null, null, BASE + '/' + toSlug(category.Name) + '/' + toSlug(h.Name));
 
             const images = [];
             if (h.ImageUrl) images.push('.' + h.ImageUrl);
@@ -4969,8 +4998,18 @@
             offset: 100
         });
 
-        // Başlangıçta ana sayfayı göster
-        showHome();
+        // GitHub Pages SPA Redirect Handler
+        (function(l) {
+            if (l.search[1] === '/') {
+                var decoded = l.search.slice(1).split('&').map(function(s) {
+                    return s.replace(/~and~/g, '&');
+                }).join('?');
+                window.history.replaceState(null, null, l.pathname.slice(0, -1) + decoded + l.hash);
+            }
+        }(window.location));
+
+        // Başlangıç: URL'e göre sayfa göster
+        routeFromUrl();
     </script>
 </body>
 </html>
