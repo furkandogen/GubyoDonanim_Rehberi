@@ -19,13 +19,15 @@
       --maku-accent: #f8b400;
     }
 
-    body {
+    html, body {
       font-family: 'Inter', sans-serif;
       background-color: var(--maku-light);
       color: #333;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      overflow-x: hidden;
+      width: 100%;
     }
 
     .custom-navbar {
@@ -61,6 +63,8 @@
 
     .main-content {
       flex: 1;
+      width: 100%;
+      overflow-x: hidden;
     }
 
     .custom-footer {
@@ -109,9 +113,16 @@
     }
 
     .category-icon {
-      font-size: 3rem;
+      font-size: 3.5rem;
       color: var(--maku-navy);
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      display: inline-block;
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .category-card:hover .category-icon {
+      transform: scale(1.1) rotate(5deg);
+      color: var(--maku-accent);
     }
 
     .hardware-card {
@@ -164,6 +175,21 @@
 
     .breadcrumb-item a {
       cursor: pointer;
+      color: var(--maku-navy);
+      font-weight: 500;
+      text-decoration: none;
+    }
+    
+    .breadcrumb-item a:hover {
+      color: var(--maku-accent);
+    }
+
+    img {
+      background-color: #f8f9fa; /* Fallback background for loading/missing images */
+    }
+
+    .table tr {
+      transition: background-color 0.2s ease;
     }
 
     /* DataTables Custom Style */
@@ -171,6 +197,120 @@
       background: var(--maku-navy) !important;
       color: white !important;
       border: 1px solid var(--maku-navy) !important;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 991.98px) {
+      .custom-navbar .navbar-brand span {
+        display: none; /* Hide 'Donanım Rehberi' subtitle on tablets and mobile to save space and prevent overlap */
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero-section {
+        padding: 3rem 0;
+        border-bottom-left-radius: 30px;
+        border-bottom-right-radius: 30px;
+      }
+
+      .hero-title {
+        font-size: 2rem;
+      }
+
+      .hero-section .display-1 {
+        font-size: 3rem !important;
+      }
+
+      .custom-navbar .navbar-brand {
+        font-size: 1.1rem;
+        padding: 0.5rem;
+      }
+
+      .detail-header {
+        border-left: 3px solid var(--maku-navy);
+        padding-left: 15px;
+      }
+
+      .detail-header h1 {
+        font-size: 2rem !important;
+      }
+
+      .info-box h3 {
+        font-size: 1.1rem;
+      }
+
+      .info-box p {
+        font-size: 1rem !important;
+      }
+
+      .card-body {
+        padding: 1.5rem;
+      }
+
+      .category-icon {
+        font-size: 2.5rem;
+      }
+
+      /* Beautiful DataTables mobile styling */
+      .dataTables_wrapper .dataTables_length,
+      .dataTables_wrapper .dataTables_filter {
+        text-align: center !important;
+        float: none !important;
+        margin-bottom: 15px;
+      }
+
+      .dataTables_wrapper .dataTables_filter input {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-top: 5px;
+      }
+
+      .dataTables_wrapper .dataTables_info,
+      .dataTables_wrapper .dataTables_paginate {
+        text-align: center !important;
+        float: none !important;
+        margin-top: 15px;
+      }
+
+      .dataTables_wrapper .dataTables_paginate .pagination {
+        justify-content: center !important;
+      }
+
+      /* Make tables scrollable on mobile if needed, but allow full-width fit */
+      .table-responsive-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+      }
+
+      #hardwareTable {
+        width: 100% !important;
+        min-width: auto;
+      }
+      
+      #hardwareTable th, #hardwareTable td {
+        white-space: normal !important;
+      }
+
+      /* Hide the 4th column (Release Date / Çıkış Tarihi) on mobile/tablet to give space to action buttons */
+      #hardwareTable th:nth-child(4),
+      #hardwareTable td:nth-child(4) {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .hero-title {
+        font-size: 1.75rem;
+      }
+      
+      .custom-footer {
+          font-size: 0.85rem;
+      }
+
+      .carousel-item img {
+        height: 250px !important;
+      }
     }
   </style>
 </head>
@@ -188,6 +328,9 @@
         </button>
         <div class="navbar-collapse collapse d-lg-inline-flex justify-content-end">
           <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link px-3" onclick="showHome()">Ana Sayfa</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -4830,32 +4973,34 @@
                     </div>
 
                     <div class="card border-0 shadow-sm rounded-4 p-4">
-                        <table id="hardwareTable" class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Görsel</th>
-                                    <th>Model / Ad</th>
-                                    <th>Marka</th>
-                                    <th>Çıkış Tarihi</th>
-                                    <th class="text-center">İşlem</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${category.Components.map(h => `
+                        <div class="table-responsive-wrapper">
+                            <table id="hardwareTable" class="table table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td width="100">
-                                            <img src=".${h.ImageUrl || '/images/no-image.png'}" class="img-fluid rounded" style="max-height: 50px; object-fit: contain;">
-                                        </td>
-                                        <td><strong>${h.Name}</strong></td>
-                                        <td><span class="badge bg-light text-dark border">${h.Brand}</span></td>
-                                        <td>${h.ReleaseDate ? new Date(h.ReleaseDate).toLocaleDateString('tr-TR') : '-'}</td>
-                                        <td class="text-center">
-                                            <button onclick="showDetails(${catId}, ${h.Id})" class="btn btn-outline-primary btn-sm rounded-pill px-3">Detaylar</button>
-                                        </td>
+                                        <th>Görsel</th>
+                                        <th>Model / Ad</th>
+                                        <th>Marka</th>
+                                        <th class="d-none d-sm-table-cell">Çıkış Tarihi</th>
+                                        <th class="text-center">İşlem</th>
                                     </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    ${category.Components.map(h => `
+                                        <tr>
+                                            <td width="80">
+                                                <img src=".${h.ImageUrl || '/images/no-image.png'}" class="img-fluid rounded" style="max-height: 50px; width: 50px; object-fit: contain;">
+                                            </td>
+                                            <td><strong>${h.Name}</strong></td>
+                                            <td><span class="badge bg-light text-dark border">${h.Brand}</span></td>
+                                            <td class="d-none d-sm-table-cell">${h.ReleaseDate ? new Date(h.ReleaseDate).toLocaleDateString('tr-TR') : '-'}</td>
+                                            <td class="text-center">
+                                                <button onclick="showDetails(${catId}, ${h.Id})" class="btn btn-outline-primary btn-sm rounded-pill px-3">Detaylar</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             `;
@@ -4885,7 +5030,7 @@
       if (images.length === 0) {
         imageHtml = '<i class="bi bi-gpu-card display-1 text-secondary mb-4 opacity-50"></i>';
       } else if (images.length === 1) {
-        imageHtml = `<img src="${images[0]}" alt="${h.Name}" class="img-fluid rounded shadow-sm mb-4" style="width: 100%; height: 300px; object-fit: contain;" />`;
+        imageHtml = `<img src="${images[0]}" alt="${h.Name}" class="img-fluid rounded shadow-sm mb-4" style="max-width: 100%; max-height: 400px; object-fit: contain;" />`;
       } else {
         imageHtml = `
                     <div id="hardwareCarousel" class="carousel carousel-dark slide mb-4 shadow-sm rounded" data-bs-ride="carousel">
@@ -4897,7 +5042,7 @@
                         <div class="carousel-inner rounded">
                             ${images.map((img, idx) => `
                                 <div class="carousel-item ${idx === 0 ? 'active' : ''}">
-                                    <img src="${img}" class="d-block w-100" alt="${h.Name}" style="height: 300px; object-fit: contain;">
+                                    <img src="${img}" class="d-block w-100" alt="${h.Name}" style="height: 350px; object-fit: contain; padding: 20px;">
                                 </div>
                             `).join('')}
                         </div>
@@ -4921,13 +5066,13 @@
                         </ol>
                     </nav>
 
-                    <div class="detail-header mt-4 mb-5">
+                    <div class="detail-header mt-4 mb-4">
                         <span class="badge badge-maku mb-2 px-3 py-2 rounded-pill"><i class="bi bi-hdd-rack me-1"></i> ${category.Name}</span>
-                        <h1 class="display-3 fw-bold" style="color: var(--maku-navy); letter-spacing: -1px;">${h.Name}</h1>
-                        <h4 class="text-muted fw-light mt-2">
-                            <i class="bi bi-building me-2"></i>${h.Brand}
-                            ${h.ReleaseDate ? `<span class="ms-4"><i class="bi bi-calendar3 me-2"></i>Piyasaya Çıkış: ${new Date(h.ReleaseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>` : ''}
-                        </h4>
+                        <h1 class="display-4 fw-bold" style="color: var(--maku-navy); letter-spacing: -1px;">${h.Name}</h1>
+                        <div class="d-flex flex-wrap gap-3 text-muted fw-light mt-2">
+                            <span><i class="bi bi-building me-2"></i>${h.Brand}</span>
+                            ${h.ReleaseDate ? `<span><i class="bi bi-calendar3 me-2"></i>Piyasaya Çıkış: ${new Date(h.ReleaseDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>` : ''}
+                        </div>
                     </div>
 
                     <div class="row">
